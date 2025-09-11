@@ -1,26 +1,22 @@
-import requests
 import ffmpeg
-import json
 import os
 
-# 설정 로드
-with open("config/config.json", "r") as f:
-    config = json.load(f)
-cookies = config.get("cookies", {})
+def download_video(url: str, output_name: str):
+    """
+    URL에서 전체 동영상을 ffmpeg로 다운로드
+    """
+    output_path = os.path.join("videos", output_name)
+    if not os.path.exists("videos"):
+        os.makedirs("videos")
 
-# 테스트용 스트림 URL (실제 VOD에서는 DASH/MP4 URL 필요)
-stream_url = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4'
-
-
-output_path = "output.mp4"
-
-print("Downloading...")
-
-(
-    ffmpeg
-    .input(stream_url)
-    .output(output_path, c='copy')
-    .run()
-)
-
-print(f"Download completed: {os.path.abspath(output_path)}")
+    try:
+        # 전체 다운로드는 start_time, end_time 없이 입력
+        (
+            ffmpeg
+            .input(url)
+            .output(output_path, c='copy')
+            .run(overwrite_output=True)
+        )
+        return output_path
+    except ffmpeg.Error as e:
+        return f"FFmpeg error: {e}"
