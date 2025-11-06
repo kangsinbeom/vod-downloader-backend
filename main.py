@@ -1,35 +1,33 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from downloader import download_video
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="VOD Downloader API")
+app = FastAPI()
 
-class DownloadRequest(BaseModel):
-    url: str
-    output_name: str
-
-@app.post("/download")
-def download_vod(req: DownloadRequest):
-    result = download_video(req.url, req.output_name)
-    if "FFmpeg error" in result:
-        raise HTTPException(status_code=500, detail=result)
-    return {"message": "Download completed", "file": result}
-
-# 허용할 Origin 설정
-origins = [
-    "http://localhost:3000",   # Next.js 개발 서버
-    "http://127.0.0.1:3000",
-]
-
+# ✅ Next.js(3000번 포트)에서 호출할 수 있도록 CORS 허용
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/")
-def root():
-    return {"message": "Hello from FastAPI"}
+@app.get("/ping")
+def ping():
+    return {"message": "pong", "status": "ok"}
+
+@app.post("/api/vod/download")
+async def download_vod(payload: dict):
+    print("Received payload:", payload)
+    video_id = payload.get("video_id")
+    start = payload.get("start")
+    end = payload.get("end")
+
+    # 여기서 실제 yt-dlp, ffmpeg 같은 로직을 수행 가능
+    # 간단한 예시 응답
+    return {
+        "video_id": video_id,
+        "start": start,
+        "end": end,
+        "status": "download complete"
+    }
